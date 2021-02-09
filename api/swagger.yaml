@@ -1,0 +1,207 @@
+---
+swagger: "2.0"
+info:
+  description: "DRAFT API specification for provisional term request management for\
+    \ an ontology. An instance of the API is attached to a particular ontology, and\
+    \ configured on the back-end to interface with the tooling surrounding that ontology.\
+    \ Therefore, information does not have to be given through the API as to location\
+    \ of Ontology/GitHub/Wiki instances for term addition."
+  version: "1.0.0"
+  title: "Provisional Term Management API"
+  contact:
+    email: "l.slater.1@bham.ac.uk"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "provisional.lokero.xyz"
+basePath: "/v1"
+schemes:
+- "https"
+- "http"
+paths:
+  /requestTermAddition:
+    post:
+      summary: "Create request for new ontology term to be added to the configured\
+        \ ontology."
+      operationId: "requestTermAddition"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Specification for the term to be added to the ontology."
+        required: true
+        schema:
+          $ref: "#/definitions/NewTermRequest"
+        x-exportParamName: "Body"
+      responses:
+        "200":
+          description: "Request created."
+          schema:
+            $ref: "#/definitions/TermRequestResponse"
+        "405":
+          description: "Invalid input"
+          schema:
+            $ref: "#/definitions/ApiError"
+        default:
+          description: "Error"
+          schema:
+            $ref: "#/definitions/ApiError"
+      security:
+      - api_key: []
+  /requestTermInclusion:
+    post:
+      summary: "Create request for existing ontology term to be included in the target\
+        \ ontology."
+      operationId: "requestTermInclusion"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Description of the external ontology term to request for inclusion\
+          \ in the target ontology."
+        required: true
+        schema:
+          $ref: "#/definitions/TermInclusionRequest"
+        x-exportParamName: "Body"
+      responses:
+        "200":
+          description: "Request created."
+          schema:
+            $ref: "#/definitions/TermRequestResponse"
+        "405":
+          description: "Invalid input"
+          schema:
+            $ref: "#/definitions/ApiError"
+        default:
+          description: "Error"
+          schema:
+            $ref: "#/definitions/ApiError"
+      security:
+      - api_key: []
+securityDefinitions:
+  api_key:
+    type: "apiKey"
+    name: "api_key"
+    in: "header"
+definitions:
+  NewTermRequest:
+    type: "object"
+    required:
+    - "description"
+    - "firstLabel"
+    - "parentClass"
+    properties:
+      firstLabel:
+        type: "string"
+        example: "C1R cell"
+        description: "The first or primary label to be associated with the new class."
+      synonyms:
+        type: "array"
+        description: "Any additional labels or synonyms to be associated with the\
+          \ new class."
+        items:
+          type: "string"
+          example: "C1R"
+      description:
+        type: "string"
+        example: "The HLA-A,B negative mutant cell line C1R is widely used as a transfection\
+          \ recipient in functional studies of class I MHC genes. It was derived from\
+          \ a normal B cell line."
+        description: "A textual definition or description of the new class."
+      creatorName:
+        type: "string"
+        example: "Luke Slater"
+        description: "Name of the person requesting the term addition."
+      creatorEmail:
+        type: "string"
+        example: "l.slater.zzz@bham.ac.uk"
+        description: "Email address of the person requesting the term addition."
+      parentClass:
+        type: "string"
+        example: "http://www.ebi.ac.uk/efo/EFO_0001640"
+        description: "The IRI of the suggested direct parent class for the requested\
+          \ term."
+    example:
+      firstLabel: "C1R cell"
+      synonyms:
+      - "C1R"
+      - "C1R"
+      creatorEmail: "l.slater.zzz@bham.ac.uk"
+      creatorName: "Luke Slater"
+      description: "The HLA-A,B negative mutant cell line C1R is widely used as a\
+        \ transfection recipient in functional studies of class I MHC genes. It was\
+        \ derived from a normal B cell line."
+      parentClass: "http://www.ebi.ac.uk/efo/EFO_0001640"
+  TermInclusionRequest:
+    type: "object"
+    required:
+    - "creatorEmail"
+    - "creatorName"
+    - "sourceIri"
+    - "sourceOntology"
+    properties:
+      sourceIri:
+        type: "string"
+        example: "http://purl.obolibrary.org/obo/HP_0000822"
+        description: "The IRI of the external ontology term to import."
+      sourceOntology:
+        type: "string"
+        example: "HP"
+        description: "The ID of the external ontology from which to import the class,\
+          \ as it appears in BioPortal."
+      parentClass:
+        type: "string"
+        description: "(optional) The IRI of the suggested direct parent class for\
+          \ the requested term."
+      includeDirectParent:
+        type: "boolean"
+        description: "Should the direct parent class of the external ontology term\
+          \ also be included?"
+      creatorName:
+        type: "string"
+        example: "Luke Slater"
+        description: "Name of the person requesting the term addition."
+      creatorEmail:
+        type: "string"
+        example: "l.slater.zzz@bham.ac.uk"
+        description: "Email address of the person requesting the term addition."
+    example:
+      sourceOntology: "HP"
+      sourceIri: "http://purl.obolibrary.org/obo/HP_0000822"
+      creatorEmail: "l.slater.zzz@bham.ac.uk"
+      creatorName: "Luke Slater"
+      parentClass: "parentClass"
+      includeDirectParent: true
+  TermRequestResponse:
+    type: "object"
+    properties:
+      githubissue:
+        type: "string"
+        description: "URL to to the GitHub issue containing the term request."
+      wikipage:
+        type: "string"
+        description: "URL to the Wiki page discussing the term request."
+      identifier:
+        description: "IRI for immediate annotation. If this is a new term request,\
+          \ it will be a provisional identifier for the target ontology. If this is\
+          \ a term inclusion request, it will be the source IRI."
+    example:
+      identifier: ""
+      wikipage: "wikipage"
+      githubissue: "githubissue"
+  ApiError:
+    type: "object"
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+      type:
+        type: "string"
+      message:
+        type: "string"
